@@ -1,0 +1,33 @@
+# Core Dependencies
+langchain>=0.1.10,<0.2.0
+langchain-community>=0.0.25,<0.1
+crewai==0.28.8
+ollama==0.1.7
+
+# Search and Retrieval
+arxiv==1.4.8
+duckduckgo-search==4.1.1
+requests==2.31.0
+
+# Vector Store and Embeddings
+faiss-cpu==1.7.4
+chromadb==0.4.22
+
+# Data Processing
+pandas==2.1.4
+numpy==1.24.3
+python-dotenv==1.0.0
+
+# Storage
+# sqlite3 is built-in with Python and does not need to be listed here
+
+# UI (Optional - will be added later)
+# gradio==4.15.0
+# streamlit==1.30.0
+
+# Utilities
+pydantic==2.5.3
+loguru==0.7.2
+
+# Development and Testing
+pytest==7.4.4
