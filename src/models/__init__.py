@@ -58,10 +58,47 @@ class Summary(BaseModel):
 class Citation(BaseModel):
     """Model for citations."""
     
+    citation_id: str = Field(..., description="Unique citation identifier")
     paper_id: str = Field(..., description="ID of the cited paper")
-    citation_format: str = Field(..., description="Citation format (bibtex, apa, etc.)")
+    citation_format: str = Field(..., description="Citation format (bibtex, apa, mla, ieee, etc.)")
     citation_text: str = Field(..., description="Formatted citation text")
+    raw_data: Dict[str, Any] = Field(default_factory=dict, description="Raw citation data")
+    agent_id: str = Field(..., description="ID of the agent that created the citation")
+    validation_status: str = Field(default="pending", description="Citation validation status")
     created_at: datetime = Field(default_factory=datetime.now)
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+class CitationRequest(BaseModel):
+    """Model for citation generation requests."""
+    
+    request_id: str = Field(..., description="Unique request identifier")
+    paper_ids: List[str] = Field(..., description="IDs of papers to cite")
+    citation_format: str = Field(..., description="Desired citation format")
+    style_options: Dict[str, Any] = Field(default_factory=dict, description="Additional style options")
+    user_id: Optional[str] = Field(None, description="User identifier")
+    created_at: datetime = Field(default_factory=datetime.now)
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+class Bibliography(BaseModel):
+    """Model for bibliography collections."""
+    
+    bibliography_id: str = Field(..., description="Unique bibliography identifier")
+    title: str = Field(..., description="Bibliography title/name")
+    citations: List[Citation] = Field(default_factory=list, description="Citations in the bibliography")
+    format_style: str = Field(..., description="Bibliography format style")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
     
     class Config:
         json_encoders = {

@@ -54,12 +54,12 @@ cp .env.example .env
 - **Step 2**: Retriever Agent (ArXiv + DuckDuckGo search)
 - **Step 3**: Summarizer Agent (Ollama LLM integration)
 - **Step 4**: Q&A Agent (Interactive research questions)
+- **Step 5**: Citation Agent (Academic citations & bibliography)
 
 ### 🔄 In Progress
-- **Step 5**: Citation Agent (planned next)
+- **Step 6**: CrewAI Integration (planned next)
 
 ### Upcoming
-- **Step 5**: Citation Agent
 - **Step 6**: CrewAI Integration
 - **Step 7**: UI Implementation
 
