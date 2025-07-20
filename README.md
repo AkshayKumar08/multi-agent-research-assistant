@@ -47,13 +47,15 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-## Current Status
+## 🚀 Current Status
 
-### Completed
+### ✅ Completed
 - **Step 1**: Project setup and basic structure
 - **Step 2**: Retriever Agent (ArXiv + DuckDuckGo search)
+- **Step 3**: Summarizer Agent (Ollama LLM integration)
 
-### In Progress
+### 🔄 In Progress
+- **Step 4**: Q&A Agent (planned next)
 - **Step 3**: Summarizer Agent (planned next)
 
 ### Upcoming
