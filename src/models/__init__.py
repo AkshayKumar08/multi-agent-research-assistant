@@ -103,3 +103,55 @@ class ResearchSession(BaseModel):
         json_encoders = {
             datetime: lambda v: v.isoformat()
         }
+
+
+class Question(BaseModel):
+    """Model for a research question."""
+    
+    question_id: str = Field(..., description="Unique question identifier")
+    question_text: str = Field(..., description="The question being asked")
+    context_type: str = Field(default="general", description="Type of context (paper, summary, session)")
+    context_ids: List[str] = Field(default_factory=list, description="IDs of relevant context items")
+    user_id: Optional[str] = Field(None, description="User identifier")
+    created_at: datetime = Field(default_factory=datetime.now)
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+class Answer(BaseModel):
+    """Model for a research answer."""
+    
+    answer_id: str = Field(..., description="Unique answer identifier")
+    question_id: str = Field(..., description="ID of the associated question")
+    answer_text: str = Field(..., description="The generated answer")
+    confidence_score: float = Field(default=0.0, description="Confidence score (0-1)")
+    source_papers: List[str] = Field(default_factory=list, description="IDs of papers used for the answer")
+    evidence: List[str] = Field(default_factory=list, description="Supporting evidence from papers")
+    agent_reasoning: Optional[str] = Field(None, description="Agent's reasoning process")
+    created_at: datetime = Field(default_factory=datetime.now)
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+
+
+class ConversationContext(BaseModel):
+    """Model for conversation context in Q&A sessions."""
+    
+    context_id: str = Field(..., description="Unique context identifier")
+    session_id: str = Field(..., description="Associated research session")
+    questions: List[Question] = Field(default_factory=list, description="Questions in this context")
+    answers: List[Answer] = Field(default_factory=list, description="Answers in this context")
+    papers_in_context: List[str] = Field(default_factory=list, description="Paper IDs available for Q&A")
+    summaries_in_context: List[str] = Field(default_factory=list, description="Summary IDs available for Q&A")
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
