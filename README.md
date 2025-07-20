@@ -24,8 +24,8 @@ This system allows users to input a research topic and get:
 - **Retriever**: Fetches relevant papers using ArXiv or DuckDuckGo
 - **Summarizer**: Summarizes paper abstracts or full text
 - **Q&A Agent**: Handles user queries about the research
-- **Citation Agent**: Extracts BibTeX or citations
-- **Planner**: Manages workflow between agents (handled by CrewAI)
+- **Citation Agent**: Extracts and formats academic citations
+- **Research Coordinator**: Orchestrates multi-agent workflows using CrewAI
 
 ## Setup
 
@@ -47,6 +47,37 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
+## Usage
+
+### Quick Start with CrewAI Integration
+```bash
+# Run the main application with interactive research
+python src/main.py
+
+# Run CrewAI demo
+python demo_crewai.py
+
+# Validate CrewAI integration
+python validate_crewai.py
+```
+
+### Individual Agent Demos
+```bash
+# Test individual agents
+python demo_retriever.py    # Paper retrieval
+python demo_summarizer.py   # Paper summarization
+python demo_qa.py          # Q&A functionality
+python demo_citation.py    # Citation generation
+```
+
+### Research Workflow
+1. **Input**: Research query/topic
+2. **Retrieval**: Agents search ArXiv and web sources
+3. **Summarization**: Key findings extracted using LLM
+4. **Q&A**: Interactive questions about the research
+5. **Citations**: Formatted academic citations generated
+6. **Coordination**: CrewAI orchestrates the entire workflow
+
 ## 🚀 Current Status
 
 ### ✅ Completed
@@ -55,14 +86,13 @@ cp .env.example .env
 - **Step 3**: Summarizer Agent (Ollama LLM integration)
 - **Step 4**: Q&A Agent (Interactive research questions)
 - **Step 5**: Citation Agent (Academic citations & bibliography)
+- **Step 6**: CrewAI Integration (Multi-agent coordination)
 
 ### 🔄 In Progress
-- **Step 6**: CrewAI Integration (planned next)
+- **Step 7**: UI Implementation (planned next)
 
 ### Upcoming
-- **Step 6**: CrewAI Integration
-- **Step 7**: UI Implementation
-
+- **Step 7**: UI Implementation (Gradio/Streamlit)
 ## License
 
 MIT License - see LICENSE file for details
