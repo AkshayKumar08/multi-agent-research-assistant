@@ -5,9 +5,10 @@ crewai==0.28.8
 ollama==0.1.7
 
 # Search and Retrieval
-arxiv==1.4.8
-duckduckgo-search==4.1.1
-requests==2.31.0
+arxiv==2.2.0
+duckduckgo-search==8.1.1
+requests>=2.32.0
+beautifulsoup4==4.12.2
 
 # Vector Store and Embeddings
 faiss-cpu==1.7.4

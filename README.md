@@ -47,6 +47,21 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
+## Current Status
+
+### Completed
+- **Step 1**: Project setup and basic structure
+- **Step 2**: Retriever Agent (ArXiv + DuckDuckGo search)
+
+### In Progress
+- **Step 3**: Summarizer Agent (planned next)
+
+### Upcoming
+- **Step 4**: Q&A Agent
+- **Step 5**: Citation Agent
+- **Step 6**: CrewAI Integration
+- **Step 7**: UI Implementation
+
 ## License
 
 MIT License - see LICENSE file for details
