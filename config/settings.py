@@ -1,5 +1,7 @@
 """
-Configuration management for the Multi-Agent Research Assistant.
+Configuration mana    # Ollama Configuration
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")ent for the Multi-Agent Research Assistant.
 """
 import os
 from pathlib import Path
@@ -23,7 +25,7 @@ class Config:
     
     # Ollama Configuration
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:7b")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "ollama/qwen2.5:0.5b")
     
     # Vector Store Configuration
     VECTOR_STORE_TYPE = os.getenv("VECTOR_STORE_TYPE", "faiss")

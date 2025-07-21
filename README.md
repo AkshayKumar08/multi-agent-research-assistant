@@ -17,7 +17,7 @@ This system allows users to input a research topic and get:
 - **Search & Retrieval**: ArXiv API, DuckDuckGo
 - **Vector Store**: FAISS
 - **Memory/Storage**: SQLite / JSON files / Chroma DB
-- **UI**: Gradio or Streamlit (optional)
+- **UI**: Streamlit (web interface)
 
 ## Agent Roles
 
@@ -48,6 +48,21 @@ cp .env.example .env
 ```
 
 ## Usage
+
+### Web-Based User Interface
+```bash
+# Install UI dependencies
+pip install streamlit plotly matplotlib
+
+# Launch UI (recommended)
+python launch_ui.py
+
+# Or launch Streamlit interface directly
+python ui_streamlit.py
+
+# Simple command-line demo
+python demo_ui_simple.py
+```
 
 ### Quick Start with CrewAI Integration
 ```bash
@@ -87,12 +102,11 @@ python demo_citation.py    # Citation generation
 - **Step 4**: Q&A Agent (Interactive research questions)
 - **Step 5**: Citation Agent (Academic citations & bibliography)
 - **Step 6**: CrewAI Integration (Multi-agent coordination)
+- **Step 7**: UI Implementation (Web interfaces and demos)
 
-### 🔄 In Progress
-- **Step 7**: UI Implementation (planned next)
-
-### Upcoming
-- **Step 7**: UI Implementation (Gradio/Streamlit)
+### 🎉 Project Complete!
+All major features implemented and tested.
+- **Step 7**: UI Implementation (Streamlit)
 ## License
 
 MIT License - see LICENSE file for details

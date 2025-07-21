@@ -22,9 +22,10 @@ python-dotenv==1.0.0
 # Storage
 # sqlite3 is built-in with Python and does not need to be listed here
 
-# UI (Optional - will be added later)
-# gradio==4.15.0
-# streamlit==1.30.0
+# UI Dependencies
+streamlit==1.39.0
+plotly==5.17.0
+matplotlib==3.8.2
 
 # Utilities
 pydantic==2.5.3
