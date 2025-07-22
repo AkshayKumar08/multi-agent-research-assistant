@@ -45,7 +45,14 @@ sys.path.append(str(Path(__file__).parent / "src"))
 from src.agents.research_coordinator import ResearchCoordinator
 from src.models import ResearchSession, ResearchPaper, Summary, Citation
 from src.utils.logger import logger
-from src.tools.ollama_client import OllamaClient
+
+# Import appropriate LLM client based on configuration
+import os
+if os.getenv("LLM_PROVIDER", "huggingface") == "huggingface" or \
+   os.getenv("STREAMLIT_SHARING", "false").lower() == "true":
+    from src.tools.huggingface_client import HuggingFaceClient as LLMClient
+else:
+    from src.tools.ollama_client import OllamaClient as LLMClient
 
 
 class StreamlitResearchUI:
@@ -394,10 +401,11 @@ class StreamlitResearchUI:
             
             ### 🛠️ Technology Stack
             - **Multi-Agent Framework:** CrewAI
-            - **LLM:** Ollama + Mistral 7B
+            - **LLM:** Hugging Face Inference API (Cloud) / Ollama (Local)
             - **Search:** ArXiv API, DuckDuckGo
             - **UI:** Streamlit
             - **Language:** Python
+            - **Deployment:** Streamlit Cloud
             
             ### 📈 Features
             - ✅ Multi-source paper discovery
