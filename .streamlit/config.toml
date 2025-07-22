@@ -1,0 +1,25 @@
+[global]
+# Suppress warnings about missing ScriptRunContext
+showWarningOnDirectExecution = false
+
+[server]
+# Server configuration
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+# Browser configuration  
+gatherUsageStats = false
+
+[theme]
+# UI theme configuration
+primaryColor = "#667eea"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+
+[logger]
+# Logging configuration
+level = "error"
+messageFormat = "%(asctime)s %(message)s"
