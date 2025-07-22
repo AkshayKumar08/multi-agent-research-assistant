@@ -1,37 +1,29 @@
-# Core Dependencies
-langchain>=0.1.10,<0.2.0
-langchain-community>=0.0.25,<0.1
-crewai>=0.148.0
-ollama==0.1.7
+# Streamlit Cloud Compatible Requirements
+# Simplified to avoid dependency conflicts and build issues
 
-# Search and Retrieval
-arxiv==2.2.0
-duckduckgo-search==8.1.1
-requests>=2.32.0
-beautifulsoup4==4.12.2
-huggingface_hub>=0.20.0
+# Core web framework
+streamlit
+
+# Data handling (compatible versions)
+pandas<2.0.0
+numpy<1.25.0
+
+# Web scraping and HTTP
 requests
+beautifulsoup4
 
-# Vector Store and Embeddings
-faiss-cpu==1.7.4
-chromadb==0.4.22
+# Hugging Face API
+huggingface_hub
 
-# Data Processing
-pandas>=1.5.0
-numpy>=1.21.0
-python-dotenv==1.0.0
+# Search APIs
+arxiv
 
-# Storage
-# sqlite3 is built-in with Python and does not need to be listed here
+# Configuration and logging
+python-dotenv
+loguru
 
-# UI Dependencies
-streamlit==1.39.0
-plotly==5.17.0
-matplotlib==3.8.2
+# Visualization
+plotly
 
-# Utilities
-pydantic==2.5.3
-loguru==0.7.2
-
-# Development and Testing
-pytest==7.4.4
+# Data validation (compatible version)
+pydantic<2.0.0
