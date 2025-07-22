@@ -1,29 +1,25 @@
 # Streamlit Cloud Compatible Requirements
-# Simplified to avoid dependency conflicts and build issues
+# Updated for Python 3.13 compatibility and Streamlit Cloud deployment
 
 # Core web framework
-streamlit
+streamlit>=1.28.0
 
-# Data handling (compatible versions)
-pandas<2.0.0
-numpy<1.25.0
+# Data handling (Python 3.13 compatible versions)
+pandas>=2.0.0
+numpy>=1.24.0
 
 # Web scraping and HTTP
-requests
-beautifulsoup4
+requests>=2.31.0
+beautifulsoup4>=4.12.0
 
 # Hugging Face API
-huggingface_hub
+huggingface_hub>=0.17.0
 
 # Search APIs
-arxiv
+arxiv>=1.4.0
 
 # Configuration and logging
-python-dotenv
-loguru
+python-dotenv>=1.0.0
 
-# Visualization
-plotly
-
-# Data validation (compatible version)
-pydantic<2.0.0
+# Visualization (optional - remove if causing issues)
+plotly>=5.15.0
