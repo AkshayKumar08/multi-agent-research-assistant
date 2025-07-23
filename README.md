@@ -93,21 +93,6 @@ python demo_citation.py    # Citation generation
 5. **Citations**: Formatted academic citations generated
 6. **Coordination**: CrewAI orchestrates the entire workflow
 
-## 🚀 Current Status
-
-### ✅ Completed
-- **Step 1**: Project setup and basic structure
-- **Step 2**: Retriever Agent (ArXiv + DuckDuckGo search)
-- **Step 3**: Summarizer Agent (Ollama LLM integration)
-- **Step 4**: Q&A Agent (Interactive research questions)
-- **Step 5**: Citation Agent (Academic citations & bibliography)
-- **Step 6**: CrewAI Integration (Multi-agent coordination)
-- **Step 7**: UI Implementation (Web interfaces and demos)
-
-### 🎉 Project Complete!
-All major features implemented and tested.
-- **Step 7**: UI Implementation (Streamlit)
-## License
 
 MIT License - see LICENSE file for details
 
