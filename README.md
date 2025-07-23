@@ -17,7 +17,7 @@ This system allows users to input a research topic and get:
 - **Search & Retrieval**: ArXiv API, DuckDuckGo
 - **Vector Store**: FAISS
 - **Memory/Storage**: SQLite / JSON files / Chroma DB
-- **UI**: Gradio or Streamlit (optional)
+- **UI**: Streamlit (web interface)
 
 ## Agent Roles
 
@@ -48,6 +48,21 @@ cp .env.example .env
 ```
 
 ## Usage
+
+### Web-Based User Interface
+```bash
+# Install UI dependencies
+pip install streamlit plotly matplotlib
+
+# Launch UI (recommended)
+python launch_ui.py
+
+# Or launch Streamlit interface directly
+python ui_streamlit.py
+
+# Simple command-line demo
+python demo_ui_simple.py
+```
 
 ### Quick Start with CrewAI Integration
 ```bash

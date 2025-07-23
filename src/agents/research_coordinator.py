@@ -16,12 +16,20 @@ from ..models import (
     ResearchSession, ResearchQuery, AgentTask,
     ResearchPaper, Summary, Citation, Question, Answer
 )
-from ..tools.ollama_client import OllamaClient
 from ..utils.logger import logger
 from .retriever_agent import RetrieverAgent
 from .summarizer_agent import SummarizerAgent
 from .qa_agent import QAAgent
 from .citation_agent import CitationAgent
+from config.settings import config
+
+# Import appropriate LLM client based on configuration
+import os
+if os.getenv("LLM_PROVIDER", "huggingface") == "huggingface" or \
+   os.getenv("STREAMLIT_SHARING", "false").lower() == "true":
+    from ..tools.huggingface_client import HuggingFaceClient as LLMClient
+else:
+    from ..tools.ollama_client import OllamaClient as LLMClient
 
 
 class ResearchCoordinator:
@@ -29,23 +37,32 @@ class ResearchCoordinator:
     Coordinates multiple agents using CrewAI for comprehensive research workflows.
     """
     
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         """Initialize the research coordinator."""
-        self.ollama_client = ollama_client or OllamaClient()
+        self.llm_client = llm_client or LLMClient()
         
         # Initialize individual agents
         self.retriever_agent = RetrieverAgent()
-        self.summarizer_agent = SummarizerAgent(self.ollama_client)
-        self.qa_agent = QAAgent(self.ollama_client)
-        self.citation_agent = CitationAgent(self.ollama_client)
+        self.summarizer_agent = SummarizerAgent(self.llm_client)
+        self.qa_agent = QAAgent(self.llm_client)
+        self.citation_agent = CitationAgent(self.llm_client)
         
-        # Initialize CrewAI LLM
-        self.llm = Ollama(model="mistral:7b", base_url="http://localhost:11434")
+        # Initialize CrewAI LLM based on provider
+        provider = os.getenv("LLM_PROVIDER", "huggingface")
+        if provider == "huggingface" or os.getenv("STREAMLIT_SHARING", "false").lower() == "true":
+            # For cloud deployment, skip CrewAI coordination and use direct agent calls
+            self.use_crew_coordination = False
+            self.llm = None  # No LLM needed for direct agent calls
+        else:
+            # For local development with Ollama
+            self.use_crew_coordination = True
+            self.llm = Ollama(model=config.OLLAMA_MODEL, base_url=config.OLLAMA_BASE_URL)
         
-        # Define CrewAI agents
-        self._setup_crewai_agents()
+        # Define CrewAI agents only if using crew coordination
+        if self.use_crew_coordination:
+            self._setup_crewai_agents()
         
-        logger.info("Research Coordinator initialized with CrewAI integration")
+        logger.info(f"Research Coordinator initialized with {provider} provider (CrewAI: {self.use_crew_coordination})")
     
     def _setup_crewai_agents(self):
         """Set up CrewAI agents for coordination."""
@@ -133,28 +150,29 @@ class ResearchCoordinator:
         )
         
         try:
-            # Define research tasks
-            tasks = self._create_research_tasks(query, session_id)
-            
-            # Create and run the crew
-            crew = Crew(
-                agents=[
-                    self.crew_retriever,
-                    self.crew_summarizer,
-                    self.crew_qa,
-                    self.crew_citation,
-                    self.crew_coordinator
-                ],
-                tasks=tasks,
-                process=Process.sequential,
-                verbose=True
-            )
-            
-            # Execute the research workflow
-            result = crew.kickoff()
-            
-            # Process results and update session
-            await self._process_crew_results(session, result)
+            if self.use_crew_coordination:
+                # Use CrewAI coordination (for local Ollama)
+                tasks = self._create_research_tasks(query, session_id)
+                
+                crew = Crew(
+                    agents=[
+                        self.crew_retriever,
+                        self.crew_summarizer,
+                        self.crew_qa,
+                        self.crew_citation,
+                        self.crew_coordinator
+                    ],
+                    tasks=tasks,
+                    process=Process.sequential,
+                    verbose=True
+                )
+                
+                result = crew.kickoff()
+                await self._process_crew_results(session, result)
+                
+            else:
+                # Use direct agent calls (for cloud deployment)
+                await self._process_direct_agent_workflow(session)
             
             logger.info(f"Research session {session_id} completed successfully")
             return session
@@ -267,7 +285,7 @@ class ResearchCoordinator:
             )
             session.tasks.append(retrieve_task)
             
-            papers = await self.retriever_agent.search_papers(session.query.query)
+            papers = self.retriever_agent.retrieve_papers(session.query)
             session.papers.extend(papers)
             
             retrieve_task.status = "completed"
@@ -284,7 +302,7 @@ class ResearchCoordinator:
             
             for paper in papers:
                 if paper.abstract:
-                    summary = await self.summarizer_agent.summarize_paper(paper)
+                    summary = self.summarizer_agent.summarize_paper(paper)
                     if summary:
                         session.summaries.append(summary)
             
@@ -301,8 +319,9 @@ class ResearchCoordinator:
             session.tasks.append(citation_task)
             
             for paper in papers:
-                citations = await self.citation_agent.generate_citations_for_paper(paper)
-                session.citations.extend(citations)
+                citation = self.citation_agent.generate_citation(paper)
+                if citation:
+                    session.citations.append(citation)
             
             citation_task.status = "completed"
             citation_task.completed_at = datetime.now()
@@ -313,6 +332,66 @@ class ResearchCoordinator:
             
         except Exception as e:
             logger.error(f"Error processing crew results: {str(e)}")
+            raise
+    
+    async def _process_direct_agent_workflow(self, session: ResearchSession):
+        """Process research workflow using direct agent calls (for cloud deployment)."""
+        try:
+            # 1. Retrieve papers
+            retrieve_task = AgentTask(
+                task_id=str(uuid.uuid4()),
+                agent_type="retriever",
+                status="running"
+            )
+            session.tasks.append(retrieve_task)
+            
+            papers = self.retriever_agent.retrieve_papers(session.query)
+            session.papers.extend(papers)
+            
+            retrieve_task.status = "completed"
+            retrieve_task.completed_at = datetime.now()
+            retrieve_task.output_data = {"papers_count": len(papers)}
+            
+            # 2. Generate summaries
+            summarize_task = AgentTask(
+                task_id=str(uuid.uuid4()),
+                agent_type="summarizer",
+                status="running"
+            )
+            session.tasks.append(summarize_task)
+            
+            for paper in papers:
+                if paper.abstract:
+                    summary = self.summarizer_agent.summarize_paper(paper)
+                    if summary:
+                        session.summaries.append(summary)
+            
+            summarize_task.status = "completed"
+            summarize_task.completed_at = datetime.now()
+            summarize_task.output_data = {"summaries_count": len(session.summaries)}
+            
+            # 3. Generate citations
+            citation_task = AgentTask(
+                task_id=str(uuid.uuid4()),
+                agent_type="citation",
+                status="running"
+            )
+            session.tasks.append(citation_task)
+            
+            for paper in papers:
+                citation = self.citation_agent.generate_citation(paper)
+                if citation:
+                    session.citations.append(citation)
+            
+            citation_task.status = "completed"
+            citation_task.completed_at = datetime.now()
+            citation_task.output_data = {"citations_count": len(session.citations)}
+            
+            # Update session timestamp
+            session.updated_at = datetime.now()
+            
+        except Exception as e:
+            logger.error(f"Error in direct agent workflow: {str(e)}")
             raise
     
     async def answer_question(self, session: ResearchSession, question: str) -> Answer:
@@ -334,13 +413,16 @@ class ResearchCoordinator:
                 context_ids=[p.id for p in session.papers]
             )
             
-            # Prepare context for Q&A
-            papers_context = {p.id: p for p in session.papers}
-            summaries_context = {s.paper_id: s for s in session.summaries}
+            # Create conversation context
+            from src.models import ConversationContext
+            context = ConversationContext(
+                context_id=str(uuid.uuid4()),
+                session_id=session.session_id
+            )
             
             # Get answer from Q&A agent
-            answer = await self.qa_agent.answer_question(
-                question_obj, papers_context, summaries_context
+            answer = self.qa_agent.answer_question(
+                question_obj, context, session.papers, session.summaries
             )
             
             logger.info(f"Answered question: {question[:50]}...")
@@ -371,10 +453,11 @@ class ResearchCoordinator:
             new_citations = []
             
             for paper in session.papers:
-                citations = await self.citation_agent.generate_citations_for_paper(
-                    paper, [format_type]
+                citation = self.citation_agent.generate_citation(
+                    paper, format_type
                 )
-                new_citations.extend(citations)
+                if citation:
+                    new_citations.append(citation)
             
             session.citations.extend(new_citations)
             session.updated_at = datetime.now()

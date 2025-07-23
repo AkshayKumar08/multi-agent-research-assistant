@@ -1,5 +1,7 @@
 """
-Configuration management for the Multi-Agent Research Assistant.
+Configuration mana    # Ollama Configuration
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")ent for the Multi-Agent Research Assistant.
 """
 import os
 from pathlib import Path
@@ -21,9 +23,20 @@ class Config:
     DATA_DIR.mkdir(exist_ok=True)
     LOGS_DIR.mkdir(exist_ok=True)
     
-    # Ollama Configuration
+    # LLM Provider Configuration
+    LLM_PROVIDER = os.getenv("LLM_PROVIDER", "huggingface")  # "ollama" or "huggingface"
+    
+    # Ollama Configuration (for local development)
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:7b")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "ollama/qwen2.5:0.5b")
+    
+    # Hugging Face Configuration (for cloud deployment)
+    HF_API_TOKEN = os.getenv("HF_API_TOKEN", "")  # Optional for better rate limits
+    HF_MODEL = os.getenv("HF_MODEL", "google/flan-t5-base")
+    
+    # Cloud deployment settings
+    IS_CLOUD_DEPLOYMENT = os.getenv("STREAMLIT_SHARING", "false").lower() == "true" or \
+                         os.getenv("IS_CLOUD_DEPLOYMENT", "false").lower() == "true"
     
     # Vector Store Configuration
     VECTOR_STORE_TYPE = os.getenv("VECTOR_STORE_TYPE", "faiss")

@@ -21,7 +21,12 @@ class OllamaClient:
             model: Model name (defaults to config)
         """
         self.base_url = base_url or config.OLLAMA_BASE_URL
-        self.model = model or config.OLLAMA_MODEL
+        # Remove ollama/ prefix if present for direct API calls
+        raw_model = model or config.OLLAMA_MODEL
+        if raw_model.startswith("ollama/"):
+            self.model = raw_model[7:]  # Remove "ollama/" prefix
+        else:
+            self.model = raw_model
         self.session = requests.Session()
         
         logger.info(f"Ollama client initialized: {self.base_url}, model: {self.model}")

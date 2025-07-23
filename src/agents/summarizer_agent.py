@@ -4,9 +4,16 @@ Summarizer Agent for generating paper summaries using LLM.
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from src.models import ResearchPaper, Summary, AgentTask
-from src.tools.ollama_client import OllamaClient
 from src.utils.logger import get_logger
 from config.settings import config
+
+# Import appropriate LLM client based on configuration
+import os
+if os.getenv("LLM_PROVIDER", "huggingface") == "huggingface" or \
+   os.getenv("STREAMLIT_SHARING", "false").lower() == "true":
+    from src.tools.huggingface_client import HuggingFaceClient as LLMClient
+else:
+    from src.tools.ollama_client import OllamaClient as LLMClient
 
 logger = get_logger("summarizer_agent")
 
@@ -14,18 +21,21 @@ logger = get_logger("summarizer_agent")
 class SummarizerAgent:
     """Agent responsible for summarizing research papers using LLM."""
     
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         """Initialize the Summarizer Agent.
         
         Args:
-            ollama_client: Optional Ollama client (creates new one if None)
+            llm_client: Optional LLM client (creates new one if None)
         """
-        self.ollama_client = ollama_client or OllamaClient()
+        self.llm_client = llm_client or LLMClient()
         self.agent_id = "summarizer_agent"
         
-        # Verify Ollama availability
-        if not self.ollama_client.is_available():
-            logger.warning("Ollama server not available. Summarization will fail until server is running.")
+        # Verify LLM availability
+        provider = os.getenv("LLM_PROVIDER", "huggingface")
+        if hasattr(self.llm_client, 'is_available') and not self.llm_client.is_available():
+            logger.warning(f"{provider} client not available. Summarization will use fallback responses.")
+        else:
+            logger.info(f"Summarizer Agent initialized with {provider} provider")
         
         logger.info("Summarizer Agent initialized")
     
@@ -51,12 +61,9 @@ class SummarizerAgent:
             # Create appropriate prompt based on summary type
             prompt = self._create_summary_prompt(paper, summary_type, max_length)
             
-            # Generate summary using Ollama
-            summary_text = self.ollama_client.generate(
-                prompt=prompt,
-                system_prompt=self._get_system_prompt(summary_type),
-                temperature=0.3,  # Lower temperature for more focused summaries
-                max_tokens=max_length * 2  # Approximate tokens to words ratio
+            # Generate summary using LLM
+            summary_text = self.llm_client.generate(
+                prompt, max_tokens=max_length * 2, task_type="summarize"
             )
             
             # Extract key findings
@@ -146,11 +153,8 @@ class SummarizerAgent:
             prompt = self._create_comparative_prompt(papers, focus_area)
             
             # Generate comparative summary
-            comparative_summary = self.ollama_client.generate(
-                prompt=prompt,
-                system_prompt=self._get_comparative_system_prompt(),
-                temperature=0.4,
-                max_tokens=800
+            comparative_summary = self.llm_client.generate(
+                prompt, max_tokens=800, task_type="summarize"
             )
             
             logger.info(f"Generated comparative summary ({len(comparative_summary)} chars)")
@@ -356,11 +360,8 @@ Original Abstract: {paper.abstract}
 
 Key findings (one per line, start each with '- '):"""
             
-            findings_text = self.ollama_client.generate(
-                prompt=prompt,
-                system_prompt="Extract key findings as clear, concise bullet points.",
-                temperature=0.2,
-                max_tokens=200
+            findings_text = self.llm_client.generate(
+                prompt, max_tokens=200, task_type="summarize"
             )
             
             # Parse findings into list
@@ -402,10 +403,8 @@ Abstract: {paper.abstract}
 
 Methodology:"""
                 
-                methodology = self.ollama_client.generate(
-                    prompt=prompt,
-                    temperature=0.2,
-                    max_tokens=100
+                methodology = self.llm_client.generate(
+                    prompt, max_tokens=100, task_type="summarize"
                 )
                 
                 return methodology.strip() if methodology.strip() else None
@@ -424,8 +423,8 @@ Methodology:"""
         return {
             "agent_id": self.agent_id,
             "agent_type": "summarizer",
-            "ollama_available": self.ollama_client.is_available(),
-            "model": self.ollama_client.model,
+            "llm_provider": os.getenv("LLM_PROVIDER", "huggingface"),
+            "llm_available": hasattr(self.llm_client, 'is_available') and self.llm_client.is_available(),
             "supported_summary_types": ["general", "technical", "methodology", "findings"],
             "features": ["individual_summaries", "comparative_analysis", "key_findings_extraction"]
         }
