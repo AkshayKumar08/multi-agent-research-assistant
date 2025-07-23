@@ -38,10 +38,18 @@ os.environ['STREAMLIT_BROWSER_GATHER_USAGE_STATS'] = 'false'
 import streamlit as st
 import requests
 import os
-import pandas as pd
-import plotly.express as px
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+
+# Optional imports for analytics (graceful fallback if not available)
+try:
+    import pandas as pd
+    import plotly.express as px
+    HAS_ANALYTICS = True
+except ImportError:
+    HAS_ANALYTICS = False
+    pd = None
+    px = None
 
 # Configure Streamlit page (must be first Streamlit command)
 try:
@@ -843,7 +851,7 @@ def display_statistics():
     col4.metric("Current Papers", len(st.session_state.current_papers))
     
     # Create visualization
-    if st.session_state.session_history:
+    if st.session_state.session_history and HAS_ANALYTICS:
         session_data = []
         for i, session in enumerate(st.session_state.session_history, 1):
             session_data.append({
@@ -858,11 +866,27 @@ def display_statistics():
                     title='Research Session Results', 
                     hover_data=['Query', 'Timestamp'])
         st.plotly_chart(fig, use_container_width=True)
+    elif st.session_state.session_history and not HAS_ANALYTICS:
+        st.info("📊 Analytics visualization requires pandas and plotly packages")
         
-        # Session history table
+        # Show simple text summary instead
+        st.write("**Session Summary:**")
+        for i, session in enumerate(st.session_state.session_history, 1):
+            query_short = session['query'][:30] + "..." if len(session['query']) > 30 else session['query']
+            st.write(f"• Session {i}: {session['papers_count']} papers - *{query_short}*")
+    
+    # Session history table
+    if st.session_state.session_history and HAS_ANALYTICS:
         st.subheader("Session History")
         history_df = pd.DataFrame(st.session_state.session_history)
         st.dataframe(history_df, use_container_width=True)
+    elif st.session_state.session_history and not HAS_ANALYTICS:
+        st.subheader("Session History") 
+        for i, session in enumerate(st.session_state.session_history, 1):
+            with st.expander(f"Session {i}: {session['query'][:40]}..."):
+                st.write(f"**Query:** {session['query']}")
+                st.write(f"**Papers Found:** {session['papers_count']}")
+                st.write(f"**Timestamp:** {session['timestamp']}")
 
 
 if __name__ == "__main__":
