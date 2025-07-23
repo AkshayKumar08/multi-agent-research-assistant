@@ -8,9 +8,16 @@ from src.models import (
     ResearchPaper, Summary, Question, Answer, ConversationContext, 
     AgentTask, ResearchSession, ResearchQuery
 )
-from src.tools.ollama_client import OllamaClient
 from src.utils.logger import get_logger
 from config.settings import config
+
+# Import appropriate LLM client based on configuration
+import os
+if os.getenv("LLM_PROVIDER", "huggingface") == "huggingface" or \
+   os.getenv("STREAMLIT_SHARING", "false").lower() == "true":
+    from src.tools.huggingface_client import HuggingFaceClient as LLMClient
+else:
+    from src.tools.ollama_client import OllamaClient as LLMClient
 
 logger = get_logger("qa_agent")
 
@@ -18,18 +25,21 @@ logger = get_logger("qa_agent")
 class QAAgent:
     """Agent responsible for answering research questions using LLM and research context."""
     
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         """Initialize the Q&A Agent.
         
         Args:
-            ollama_client: Optional Ollama client (creates new one if None)
+            llm_client: Optional LLM client (creates new one if None)
         """
-        self.ollama_client = ollama_client or OllamaClient()
+        self.llm_client = llm_client or LLMClient()
         self.agent_id = "qa_agent"
         
-        # Verify Ollama availability
-        if not self.ollama_client.is_available():
-            logger.warning("Ollama server not available. Q&A will fail until server is running.")
+        # Verify LLM availability
+        provider = os.getenv("LLM_PROVIDER", "huggingface")
+        if hasattr(self.llm_client, 'is_available') and not self.llm_client.is_available():
+            logger.warning(f"{provider} client not available. Q&A will use fallback responses.")
+        else:
+            logger.info(f"Q&A Agent initialized with {provider} provider")
         
         logger.info("Q&A Agent initialized")
     
@@ -220,11 +230,19 @@ REASONING: [Explain your reasoning and which sources you used]
 CONFIDENCE: [High/Medium/Low] - [Brief explanation of confidence level]"""
 
         try:
-            response = self.ollama_client.generate(
-                prompt=prompt,
-                max_tokens=1000,
-                temperature=0.3  # Lower temperature for more factual responses
-            )
+            # Check if using HuggingFace client (doesn't support temperature)
+            if hasattr(self.llm_client, 'api_url'):  # HuggingFace client
+                response = self.llm_client.generate(
+                    prompt=prompt,
+                    max_tokens=1000,
+                    task_type="qa"
+                )
+            else:  # Ollama client
+                response = self.llm_client.generate(
+                    prompt=prompt,
+                    max_tokens=1000,
+                    temperature=0.3  # Lower temperature for more factual responses
+                )
             
             # Parse the response to extract answer and reasoning
             if "ANSWER:" in response and "REASONING:" in response:

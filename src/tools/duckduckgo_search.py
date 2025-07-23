@@ -4,12 +4,23 @@ DuckDuckGo search tool for retrieving research-related content.
 import requests
 from typing import List, Optional, Dict, Any
 from datetime import datetime
-from duckduckgo_search import DDGS
 from bs4 import BeautifulSoup
 from src.models import ResearchPaper
 from src.utils.logger import get_logger
 
-logger = get_logger("duckduckgo_tool")
+# Try to import DuckDuckGo search with fallback
+try:
+    from ddgs import DDGS  # New package name
+    DDGS_AVAILABLE = True
+except ImportError:
+    try:
+        from duckduckgo_search import DDGS  # Old package name
+        DDGS_AVAILABLE = True
+    except ImportError:
+        DDGS_AVAILABLE = False
+        logger = get_logger("duckduckgo_tool")
+        logger.warning("DuckDuckGo search not available. Install 'ddgs' or 'duckduckgo-search' package.")
+
 
 
 class DuckDuckGoSearchTool:
@@ -22,7 +33,11 @@ class DuckDuckGoSearchTool:
             max_results: Maximum number of results to return per search
         """
         self.max_results = max_results
-        self.ddgs = DDGS()
+        if DDGS_AVAILABLE:
+            self.ddgs = DDGS()
+        else:
+            self.ddgs = None
+            logger.warning("DuckDuckGo search unavailable - will return empty results")
     
     def search(
         self, 
@@ -45,6 +60,11 @@ class DuckDuckGoSearchTool:
         max_results = max_results or self.max_results
         
         logger.info(f"Searching DuckDuckGo for: '{query}' (max_results={max_results})")
+        
+        # Return empty list if DDGS is not available
+        if not DDGS_AVAILABLE or self.ddgs is None:
+            logger.warning("DuckDuckGo search not available - returning empty results")
+            return []
         
         try:
             # Add research-specific terms to improve results

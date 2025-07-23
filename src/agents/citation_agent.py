@@ -9,9 +9,16 @@ from src.models import (
     ResearchPaper, Citation, CitationRequest, Bibliography, 
     AgentTask, ResearchSession
 )
-from src.tools.ollama_client import OllamaClient
 from src.utils.logger import get_logger
 from config.settings import config
+
+# Import appropriate LLM client based on configuration
+import os
+if os.getenv("LLM_PROVIDER", "huggingface") == "huggingface" or \
+   os.getenv("STREAMLIT_SHARING", "false").lower() == "true":
+    from src.tools.huggingface_client import HuggingFaceClient as LLMClient
+else:
+    from src.tools.ollama_client import OllamaClient as LLMClient
 
 logger = get_logger("citation_agent")
 
@@ -25,18 +32,21 @@ class CitationAgent:
         "vancouver", "nature", "science", "cell"
     ]
     
-    def __init__(self, ollama_client: Optional[OllamaClient] = None):
+    def __init__(self, llm_client: Optional[LLMClient] = None):
         """Initialize the Citation Agent.
         
         Args:
-            ollama_client: Optional Ollama client (creates new one if None)
+            llm_client: Optional LLM client (creates new one if None)
         """
-        self.ollama_client = ollama_client or OllamaClient()
+        self.llm_client = llm_client or LLMClient()
         self.agent_id = "citation_agent"
         
-        # Verify Ollama availability
-        if not self.ollama_client.is_available():
-            logger.warning("Ollama server not available. Citations will use fallback formatting.")
+        # Verify LLM availability
+        provider = os.getenv("LLM_PROVIDER", "huggingface")
+        if hasattr(self.llm_client, 'is_available') and not self.llm_client.is_available():
+            logger.warning(f"{provider} client not available. Citations will use fallback formatting.")
+        else:
+            logger.info(f"Citation Agent initialized with {provider} provider")
         
         logger.info("Citation Agent initialized")
     
@@ -458,7 +468,7 @@ class CitationAgent:
         style_options: Dict[str, Any]
     ) -> str:
         """Generate citation using LLM for unsupported formats."""
-        if not self.ollama_client.is_available():
+        if not self.llm_client.is_available():
             return self._create_fallback_citation_text(paper, citation_format)
         
         # Create prompt for LLM
@@ -475,11 +485,19 @@ Publication Type: {raw_data['publication_type']}
 Please provide only the formatted citation text according to {citation_format.upper()} style guidelines. Do not include any explanations or additional text."""
 
         try:
-            response = self.ollama_client.generate(
-                prompt=prompt,
-                max_tokens=300,
-                temperature=0.1  # Low temperature for consistent formatting
-            )
+            # Check if using HuggingFace client (doesn't support temperature)
+            if hasattr(self.llm_client, 'api_url'):  # HuggingFace client
+                response = self.llm_client.generate(
+                    prompt=prompt,
+                    max_tokens=300,
+                    task_type="general"
+                )
+            else:  # Ollama client
+                response = self.llm_client.generate(
+                    prompt=prompt,
+                    max_tokens=300,
+                    temperature=0.1  # Low temperature for consistent formatting
+                )
             return response.strip()
         except Exception as e:
             logger.error(f"LLM citation generation failed: {str(e)}")
